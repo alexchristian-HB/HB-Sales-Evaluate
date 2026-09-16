@@ -8,6 +8,7 @@ import { Step3ServiceMatch } from './components/Step3ServiceMatch';
 import { Step4OutboundSuite } from './components/Step4OutboundSuite';
 import { SalesAdvisorDrawer } from './components/SalesAdvisorDrawer';
 import { CompanyIntelligence } from './types';
+import { generateClientIntelligence } from './services/intelligenceEngine';
 import { Layers, Search, Cpu, Linkedin, CheckCircle, ShieldAlert, Sparkles, History, ArrowRight, ShieldCheck } from 'lucide-react';
 
 export default function App() {
@@ -18,6 +19,27 @@ export default function App() {
   const [isAdvisorOpen, setIsAdvisorOpen] = useState(false);
   const [recentProspects, setRecentProspects] = useState<any[]>([]);
   const [activeStepTab, setActiveStepTab] = useState<'all' | 'step1' | 'step2' | 'step3' | 'step4'>('all');
+
+  const saveLocalProspect = (item: CompanyIntelligence) => {
+    try {
+      const existingStr = localStorage.getItem('hb_recent_prospects');
+      const existing: any[] = existingStr ? JSON.parse(existingStr) : [];
+      const filtered = existing.filter((p) => p.domain !== item.domain);
+      const updated = [
+        {
+          id: item.id,
+          domain: item.domain,
+          companyName: item.companyName,
+          industry: item.industry,
+          analyzedAt: item.analyzedAt,
+        },
+        ...filtered,
+      ].slice(0, 8);
+      localStorage.setItem('hb_recent_prospects', JSON.stringify(updated));
+    } catch (e) {
+      // ignore localStorage errors
+    }
+  };
 
   // Trigger analysis for a given domain
   const analyzeDomain = async (domain: string, notes?: string, focus?: string) => {
@@ -35,19 +57,34 @@ export default function App() {
     }
 
     try {
-      const response = await fetch('/api/analyze-prospect', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ domain, customNotes: notes, targetFocus: focus }),
-      });
+      let data: CompanyIntelligence | null = null;
+      try {
+        const response = await fetch('/api/analyze-prospect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ domain, customNotes: notes, targetFocus: focus }),
+        });
 
-      if (!response.ok) {
-        throw new Error(`Agent reconnaissance failed with status ${response.status}`);
+        if (response.ok) {
+          data = await response.json();
+        } else {
+          // Status 404 or other non-200 (e.g. Vercel static deployment)
+          console.warn(`Reconnaissance API returned status ${response.status}. Executing client-side autonomous intelligence engine...`);
+          data = generateClientIntelligence(domain, notes, focus);
+        }
+      } catch (fetchErr) {
+        // Network connection error / static hosting
+        console.warn('Network request failed. Executing client-side autonomous intelligence engine...', fetchErr);
+        data = generateClientIntelligence(domain, notes, focus);
       }
 
-      const data: CompanyIntelligence = await response.json();
-      setIntelligence(data);
-      fetchRecentProspects();
+      if (data) {
+        setIntelligence(data);
+        saveLocalProspect(data);
+        fetchRecentProspects();
+      } else {
+        throw new Error('Failed to generate reconnaissance intelligence.');
+      }
     } catch (err: any) {
       console.error('Error analyzing prospect:', err);
       setErrorMessage(err.message || 'Failed to complete autonomous reconnaissance. Please check your domain and retry.');
@@ -61,10 +98,22 @@ export default function App() {
       const res = await fetch('/api/recent-prospects');
       if (res.ok) {
         const data = await res.json();
-        setRecentProspects(data.prospects || []);
+        if (data.prospects && data.prospects.length > 0) {
+          setRecentProspects(data.prospects);
+          return;
+        }
       }
     } catch (e) {
-      // silently ignore
+      // fall back to localStorage
+    }
+
+    try {
+      const stored = localStorage.getItem('hb_recent_prospects');
+      if (stored) {
+        setRecentProspects(JSON.parse(stored));
+      }
+    } catch (e) {
+      // ignore
     }
   };
 
