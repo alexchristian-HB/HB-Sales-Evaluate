@@ -1,0 +1,6 @@
+{
+  "name": "Hidden Brains B2B Prospecting & Intelligence Agent",
+  "description": "Automated B2B company research, tech stack pain point analysis, LinkedIn & RFP collaboration finder, and Hidden Brains service alignment suite for sales & BD teams.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
