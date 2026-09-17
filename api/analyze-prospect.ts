@@ -1,10 +1,12 @@
 import { GoogleGenAI } from '@google/genai';
 import { generateClientIntelligence } from '../src/services/intelligenceEngine';
 
-const DEFAULT_GEMINI_KEY = 'AIzaSyDMO4gVcRKDAO8REOcmAhLiu1LGT4Z7rWI';
-
 async function generateWithGemini(prompt: string): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY || DEFAULT_GEMINI_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey === 'MY_GEMINI_API_KEY') {
+    throw new Error('GEMINI_API_KEY is not configured in environment variables');
+  }
+
   const ai = new GoogleGenAI({
     apiKey,
     httpOptions: {

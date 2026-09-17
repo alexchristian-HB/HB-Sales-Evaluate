@@ -2,10 +2,6 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/api/:match*",
-      "destination": "/api/:match*"
-    },
-    {
       "source": "/((?!api/.*).*)",
       "destination": "/index.html"
     }

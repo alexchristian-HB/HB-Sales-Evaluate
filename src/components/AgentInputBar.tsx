@@ -8,6 +8,7 @@ interface AgentInputBarProps {
 }
 
 const PRESET_DOMAINS = [
+  { label: 'DWTC Hospitality', domain: 'https://dwtchospitality.com/', tag: 'Mega Events & Banqueting' },
   { label: 'Highway Real Estate', domain: 'https://highwayrealestates.com/', tag: 'Real Estate UAE' },
   { label: 'Hidden Brains (Self)', domain: 'https://hiddenbrains.com/', tag: 'Enterprise IT' },
   { label: 'Datadog', domain: 'datadoghq.com', tag: 'Cloud Monitoring' },

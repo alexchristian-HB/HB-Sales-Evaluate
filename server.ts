@@ -12,14 +12,14 @@ const PORT = 3000;
 
 app.use(express.json({ limit: '10mb' }));
 
-// Default Gemini API key provided by user
-const DEFAULT_GEMINI_KEY = 'AIzaSyDMO4gVcRKDAO8REOcmAhLiu1LGT4Z7rWI';
-
-// Lazy initializer for Gemini client
+// Lazy initializer for Gemini client using server-side environment variables
 let aiClient: GoogleGenAI | null = null;
-function getAi(): GoogleGenAI {
+function getAi(): GoogleGenAI | null {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey === 'MY_GEMINI_API_KEY') {
+    return null;
+  }
   if (!aiClient) {
-    const apiKey = process.env.GEMINI_API_KEY || DEFAULT_GEMINI_KEY;
     aiClient = new GoogleGenAI({
       apiKey,
       httpOptions: {
@@ -35,6 +35,9 @@ function getAi(): GoogleGenAI {
 // Multi-model Gemini executor with graceful fallback
 async function generateWithGemini(prompt: string): Promise<string> {
   const ai = getAi();
+  if (!ai) {
+    throw new Error('GEMINI_API_KEY is not configured in environment');
+  }
   const models = ['gemini-3.6-flash', 'gemini-2.0-flash'];
   let lastError: any = null;
   for (const model of models) {
@@ -99,7 +102,7 @@ async function crawlDomain(domain: string): Promise<CrawledPageData> {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         },
-        signal: AbortSignal.timeout(5000),
+        signal: AbortSignal.timeout(2500),
       });
 
       if (res.ok) {
@@ -660,11 +663,12 @@ app.post('/api/analyze-prospect', async (req: Request, res: Response) => {
     const crawledData = await crawlDomain(clean);
     console.log(`Crawled domain ${clean}: title="${crawledData.title || 'N/A'}", realEstate=${crawledData.isRealEstate}`);
 
-    const apiKey = process.env.GEMINI_API_KEY || DEFAULT_GEMINI_KEY;
-    const isApiKeyConfigured = Boolean(apiKey && apiKey !== 'dummy-key');
+    const isApiKeyConfigured = Boolean(
+      process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'MY_GEMINI_API_KEY'
+    );
 
     if (!isApiKeyConfigured) {
-      console.log('Using robust grounded fallback intelligence (GEMINI_API_KEY not configured).');
+      console.log('Using robust grounded fallback intelligence (GEMINI_API_KEY not configured in environment).');
       const fallbackResult = generateFallbackData(clean, true, crawledData);
       prospectHistory.set(clean, fallbackResult);
       res.json(fallbackResult);
@@ -835,8 +839,9 @@ app.post('/api/customize-outreach', async (req: Request, res: Response) => {
       return;
     }
 
-    const apiKey = process.env.GEMINI_API_KEY || DEFAULT_GEMINI_KEY;
-    const isApiKeyConfigured = Boolean(apiKey && apiKey !== 'dummy-key');
+    const isApiKeyConfigured = Boolean(
+      process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'MY_GEMINI_API_KEY'
+    );
 
     if (!isApiKeyConfigured) {
       res.json({
@@ -868,18 +873,28 @@ Return JSON only:
 }
 `;
 
-    const responseText = await generateWithGemini(prompt);
+    try {
+      const responseText = await generateWithGemini(prompt);
 
-    let text = responseText || '';
-    if (text.startsWith('```json')) text = text.replace(/^```json\s*/i, '').replace(/\s*```$/, '');
-    else if (text.startsWith('```')) text = text.replace(/^```\s*/, '').replace(/\s*```$/, '');
-    const firstBrace = text.indexOf('{');
-    const lastBrace = text.lastIndexOf('}');
-    if (firstBrace !== -1 && lastBrace !== -1) {
-      text = text.substring(firstBrace, lastBrace + 1);
+      let text = responseText || '';
+      if (text.startsWith('```json')) text = text.replace(/^```json\s*/i, '').replace(/\s*```$/, '');
+      else if (text.startsWith('```')) text = text.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      const firstBrace = text.indexOf('{');
+      const lastBrace = text.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1) {
+        text = text.substring(firstBrace, lastBrace + 1);
+      }
+      const result = JSON.parse(text);
+      res.json(result);
+    } catch (aiErr) {
+      console.warn('AI generation for outreach failed, using high-impact consultative fallback:', aiErr);
+      res.json({
+        subject: `Strategic Modern MERN & AI Modernization for ${intelligence.companyName}`,
+        content: `Hi ${persona || 'Leadership Team'},\n\nI noticed ${intelligence.companyName}'s high-growth initiatives in ${intelligence.industry}. With 500+ CMMI Level 3 engineers and 20+ years of delivery experience at Hidden Brains (https://hiddenbrains.com), we help enterprise teams transition from legacy stacks to modern high-speed MERN architectures and integrate bespoke AI automation.\n\nGiven your active initiatives, would you be open to a 10-minute introductory sync this Thursday to explore how our dedicated pods can accelerate your engineering roadmap?\n\nBest regards,\nHidden Brains Team`,
+        channel: channel || 'email',
+        tone: tone || 'consultative'
+      });
     }
-    const result = JSON.parse(text);
-    res.json(result);
   } catch (err: any) {
     console.error('Error generating customized outreach:', err);
     res.status(500).json({ error: 'Failed to customize outreach' });
@@ -895,8 +910,9 @@ app.post('/api/ask-advisor', async (req: Request, res: Response) => {
       return;
     }
 
-    const apiKey = process.env.GEMINI_API_KEY || DEFAULT_GEMINI_KEY;
-    const isApiKeyConfigured = Boolean(apiKey && apiKey !== 'dummy-key');
+    const isApiKeyConfigured = Boolean(
+      process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'MY_GEMINI_API_KEY'
+    );
 
     if (!isApiKeyConfigured) {
       res.json({
@@ -920,9 +936,16 @@ Rep's Question:
 Provide an authoritative, actionable, tactical response (2-3 crisp paragraphs or bullet points). Address exact technical counter-arguments, RFP bidding tips, MERN vs legacy arguments, or deal closing tactics using Hidden Brains credentials (CMMI Level 3, 500+ engineers, 2,400+ clients, 20+ years).
 `;
 
-    const responseText = await generateWithGemini(prompt);
-
-    res.json({ answer: responseText });
+    try {
+      const responseText = await generateWithGemini(prompt);
+      res.json({ answer: responseText });
+    } catch (aiErr) {
+      console.warn('AI advisor generation failed, using consultative fallback:', aiErr);
+      const company = intelligence?.companyName || 'the prospect';
+      res.json({
+        answer: `Strategic recommendation for ${company}:\n\n1. Anchor your pitch around Hidden Brains credentials: CMMI Level 3 certified delivery rigor, 500+ in-house engineers, 2,400+ clients across 107 countries, and 20+ years in software engineering.\n2. Address technical modernization: Highlight how migrating to a modular MERN stack (React/Next.js and Node microservices) eliminates latency, cuts maintenance costs, and enables rapid release cycles.\n3. Offer rapid risk-free ramp-up: Offer a dedicated engineering pod onboarded in 5 business days with overlapping business hours and up to 60% operational savings compared to local recruitment.`
+      });
+    }
   } catch (err: any) {
     console.error('Error in /api/ask-advisor:', err);
     res.status(500).json({ error: 'Failed to get advisor response' });
