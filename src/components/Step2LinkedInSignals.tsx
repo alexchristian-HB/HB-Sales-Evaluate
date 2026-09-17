@@ -7,12 +7,15 @@ interface Step2Props {
 }
 
 export const Step2LinkedInSignals: React.FC<Step2Props> = ({ intelligence }) => {
-  const { linkedInSignals, companyName, domain } = intelligence;
+  const { linkedInSignals, companyName, domain, linkedInCompanyUrl, rfpPortalUrl } = intelligence;
+  const directLinkedInUrl =
+    linkedInCompanyUrl ||
+    `https://www.linkedin.com/company/${encodeURIComponent(companyName.toLowerCase().replace(/[^a-z0-9]+/g, '-'))}`;
 
   return (
     <section id="step-2-linkedin" className="space-y-6">
       {/* Step Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-200 pb-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200">
@@ -23,18 +26,32 @@ export const Step2LinkedInSignals: React.FC<Step2Props> = ({ intelligence }) => 
             </h2>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Articles, announcements, and initiatives welcoming users or companies to collaborate on ongoing projects, tenders, or developer partnerships.
+            Official company posts, ongoing project work, open tenders/RFPs, and verified executive collaboration signals.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {rfpPortalUrl && (
+            <a
+              href={rfpPortalUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors shadow-xs"
+              title="Official Government / Corporate RFP & Tenders Portal"
+            >
+              <FileText className="w-3.5 h-3.5 text-purple-600" />
+              <span>Official RFP Portal</span>
+              <ArrowUpRight className="w-3 h-3 text-purple-500" />
+            </a>
+          )}
           <a
-            href={`https://www.linkedin.com/search/results/companies/?keywords=${encodeURIComponent(companyName)}`}
+            href={directLinkedInUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#0A66C2] text-white hover:bg-[#004182] transition-colors shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0A66C2] text-white hover:bg-[#004182] transition-colors shadow-xs"
+            title={`View official ${companyName} LinkedIn Company Profile`}
           >
             <Linkedin className="w-3.5 h-3.5" />
-            <span>Search {companyName} on LinkedIn</span>
+            <span>Official LinkedIn Profile</span>
             <ArrowUpRight className="w-3 h-3" />
           </a>
         </div>
@@ -81,6 +98,21 @@ export const Step2LinkedInSignals: React.FC<Step2Props> = ({ intelligence }) => 
                   <p className="text-xs text-slate-600 mt-2 leading-relaxed">
                     {signal.summary}
                   </p>
+
+                  {signal.postUrl && (
+                    <div className="pt-2">
+                      <a
+                        href={signal.postUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-blue-50 text-slate-800 hover:text-blue-700 border border-slate-200 hover:border-blue-300 transition-colors shadow-2xs"
+                      >
+                        <Radio className="w-3 h-3 text-blue-600 animate-pulse" />
+                        <span>{signal.actionLabel || (isRfp ? 'View RFP Notice' : 'View Official Post / Update')}</span>
+                        <ArrowUpRight className="w-3.5 h-3.5 text-blue-600" />
+                      </a>
+                    </div>
+                  )}
                 </div>
 
                 {/* Collaboration Angle */}

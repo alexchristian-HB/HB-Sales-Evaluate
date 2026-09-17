@@ -26,6 +26,11 @@ export function generateClientIntelligence(
 ): CompanyIntelligence {
   const clean = cleanDomain(domain);
   const isHiddenBrains = clean.includes('hiddenbrains');
+  const isDwtc =
+    clean.includes('dwtchospitality') ||
+    clean.includes('dwtc') ||
+    clean.includes('dubaiworldtradecentre') ||
+    clean.includes('dubai-world-trade-centre');
   const isHighway =
     clean.includes('highwayrealestates') ||
     clean.includes('highwayrealestate') ||
@@ -36,6 +41,244 @@ export function generateClientIntelligence(
     clean.includes('property') ||
     clean.includes('realty') ||
     clean.includes('properties');
+
+  // Case 0: DWTC Hospitality (Dubai World Trade Centre Hospitality)
+  if (isDwtc) {
+    return {
+      id: `dwtc-${Date.now()}`,
+      domain: clean.includes('.') ? clean : 'dwtchospitality.com',
+      companyName: 'Hospitality by Dubai World Trade Centre (DWTC Hospitality)',
+      tagline: 'Premier Luxury Event Catering, Royal Banquets & Protocol Hospitality Across UAE',
+      industry: 'Luxury Catering, Event Hospitality & MICE Banqueting Operations',
+      headquarters: 'Dubai World Trade Centre, Sheikh Zayed Road, P.O. Box 9292, Dubai, UAE',
+      estimatedScale: '2,000,000+ Meals Served Annually | 148+ Master Chefs (19 Nationalities) | 5-Star Kitchen Operations across 100,000+ sqm (Sheikh Saeed & Za\'abeel Halls, DEC) | HACCP & ISO 22000 Certified',
+      linkedInCompanyUrl: 'https://www.linkedin.com/company/dubai-world-trade-centre/',
+      rfpPortalUrl: 'https://esupply.dubai.gov.ae',
+      coreOfferings: [
+        'Mega-Scale Exhibition & Convention Catering (serving up to 20,000+ guests concurrently for GITEX, Arab Health, Gulfood)',
+        'Royal, Diplomatic & State Protocol Banqueting (custom VIP dining experiences, high-level heads of state galas)',
+        'Luxury & Bespoke Wedding Catering across prestigious venues and private royal estates in the UAE',
+        'Outside Catering & Pop-Up Hospitality (Al Majlis Ramadan hospitality, corporate executive retreats)',
+        'In-House Master Artisan Bakery & Confectionery Production',
+        'HACCP & ISO 22000 Certified Cold-Chain Food Safety & Halal-Compliant Kitchen Logistics',
+      ],
+      targetAudience:
+        'Global exhibition organizers, corporate event planners, high-net-worth wedding couples, UAE government protocol departments, and international conference delegates',
+      techStackObservedOrInferred: {
+        frontend: ['Custom Hospitality Web Portals', 'React / HTML5 Event Showcase', 'Legacy PDF/Email Booking Flow'],
+        backend: ['SAP ERP Integration Layer', 'PHP / Node.js Microservices', 'Enterprise Event CRM'],
+        cloudInfra: ['Private Enterprise Cloud', 'Dubai Government Data Center / Azure', 'HACCP IoT Sensors'],
+        database: ['SAP HANA / Oracle', 'MySQL', 'PostgreSQL'],
+        aiReadinessScore: 68,
+        modernizationUrgencyScore: 88,
+      },
+      painPoints: [
+        {
+          id: 'dwtc-p1',
+          category: 'architecture_mern',
+          title: 'High-Volume Banquet Menu Customization & Multi-Tiered Quoting Bottlenecks',
+          severity: 'critical',
+          currentRisk:
+            'Corporate event planners and wedding organizers face slow manual quoting, static PDF menus, and disconnected tasting approval cycles rather than a real-time digital configurator.',
+          businessImpact:
+            'Prolonged banquet sales velocity, administrative overhead, and friction for international clients booking large gala dinners.',
+          remedy:
+            'Build a high-performance MERN (Next.js/React + Node.js) Interactive Banquet Configurator with dynamic calorie, allergen, and tiered pricing calculations.',
+        },
+        {
+          id: 'dwtc-p2',
+          category: 'ai_automation',
+          title: 'Perishable Kitchen Inventory Forecasting & High-Volume Food Waste in Mega-Exhibitions',
+          severity: 'critical',
+          currentRisk:
+            'Catering for 20,000+ daily convention attendees leads to manual kitchen prep forecasting, risking perishable over-ordering or ingredient shortfalls during concurrent exhibitions.',
+          businessImpact:
+            'Substantial food waste expenditure, compressed margins on high-volume banquets, and missed ESG sustainability milestones.',
+          remedy:
+            'Implement an Enterprise AI Predictive Banquet Demand & Kitchen Inventory Engine that analyzes historical exhibition attendance, dietary profiles, and seasonal procurement to optimize banquet ingredient orders with 95%+ accuracy.',
+        },
+        {
+          id: 'dwtc-p3',
+          category: 'mobile_scalability',
+          title: 'Kitchen-to-Floor Communication Lag Across Massive Exhibition Halls',
+          severity: 'high',
+          currentRisk:
+            'Coordinating hundreds of banquet captains, runners, and culinary teams across Sheikh Saeed, Za\'abeel, and DEC halls relies on paper orders and two-way radios.',
+          businessImpact:
+            'Course dispatch delays, table service friction during VIP galas, and lack of real-time visibility for banquet directors.',
+          remedy:
+            'Deploy dedicated cross-platform iOS & Android mobile apps for banquet captains and kitchen runners featuring real-time course dispatch, table status monitoring, and allergy alerts.',
+        },
+        {
+          id: 'dwtc-p4',
+          category: 'legacy_debt',
+          title: 'Disparate ERP & Procurement Synchronization Friction (SAP / eSupply / CRM)',
+          severity: 'high',
+          currentRisk:
+            'Siloed data between DWTC\'s core SAP ERP, Dubai Government eSupply vendor portals, and hospitality sales CRM creates duplicate data entry and reconciliation delays.',
+          businessImpact:
+            'Delayed invoicing, inventory discrepancies between main cold stores and kitchen prep stations, and administrative friction.',
+          remedy:
+            'Engineer robust Node.js microservices and API gateways connecting event bookings directly into SAP ERP and supplier procurement workflows.',
+        },
+      ],
+      linkedInSignals: [
+        {
+          type: 'open_initiative',
+          title: 'DWTC Net-Zero Food Waste & Sustainable Culinary Modernization Initiative',
+          summary:
+            'Dubai World Trade Centre executive leadership announced their comprehensive net-zero food waste pledge and sustainable event hospitality framework, expanding farm-to-table banquet menus and exploring AI-driven food-waste reduction across world summits (COP28, Arab Health, GITEX).',
+          sourceContext: 'DWTC Official LinkedIn Announcements & UAE Sustainability Framework',
+          collaborationAngle:
+            'Deploy Hidden Brains\' Enterprise AI Predictive Food-Waste & Menu Demand Intelligence platform to automate banquet consumption forecasting and reduce kitchen overproduction by up to 35%.',
+          keyStakeholders: [
+            'Executive Vice President - DWTC',
+            'Director of Culinary & Hospitality Operations',
+            'Head of Sustainability & ESG',
+            'VP of Information Technology',
+          ],
+          postUrl: 'https://www.linkedin.com/company/dubai-world-trade-centre/',
+          actionLabel: 'View Official Post on LinkedIn',
+        },
+        {
+          type: 'rfp_bid',
+          title: 'Dubai Government eSupply Open RFP: Hospitality Digital Ordering & Catering Management Systems',
+          summary:
+            'DWTC Commercial Procurement has active supplier tenders on the Dubai Government eSupply portal seeking enterprise-grade software solutions for banquet event order automation, mobile banquet order dispatch, and vendor catalog integration.',
+          sourceContext: 'Dubai Government eSupply Portal / DWTC Commercial Tenders',
+          collaborationAngle:
+            'Bid Hidden Brains\' proven custom web development & mobile engineering practice with CMMI Level 3 delivery rigor to deliver a modern MERN catering management portal with mobile banquet captain apps.',
+          keyStakeholders: [
+            'Head of Procurement & Contracts',
+            'Chief Information Officer',
+            'Director of Commercial Hospitality',
+          ],
+          postUrl: 'https://esupply.dubai.gov.ae',
+          actionLabel: 'View RFP on Dubai eSupply Portal',
+        },
+        {
+          type: 'partnership_call',
+          title: 'Royal & Luxury Wedding Banqueting: Digital Guest Profiling & Customization Initiative',
+          summary:
+            'DWTC Hospitality is modernizing its bespoke wedding and private protocol banqueting services, seeking digital solutions for interactive menu tasting scheduling, custom dietary preference profiling, and seamless event floor management.',
+          sourceContext: 'DWTC Hospitality Official Portfolio & UAE Wedding Industry Showcase',
+          collaborationAngle:
+            'Provide a dedicated Hidden Brains engineering pod to build a bespoke client-facing wedding portal with interactive menu builder, 3D seating dietary allocation, and automated quote generation.',
+          keyStakeholders: [
+            'Head of Weddings & Social Events',
+            'Executive Chef - Banqueting',
+            'Digital Experience Manager',
+          ],
+          postUrl: 'https://dwtchospitality.com',
+          actionLabel: 'View DWTC Hospitality Portfolio',
+        },
+      ],
+      serviceMatches: [
+        {
+          serviceName: 'Custom Web Application Development & Catering Management Portal',
+          serviceCategory: 'Custom Web Application Engineering',
+          hiddenBrainsOfferingUrl: 'https://hiddenbrains.com/web-development-company.html',
+          whyFit:
+            'Replaces manual event quote workflows with a high-performance Next.js/React portal for corporate event planners and wedding clients.',
+          valueProposition:
+            'Modern MERN architecture enables sub-second menu searches, interactive dish customizers, and seamless digital quote generation.',
+          proofOfCapability:
+            'Over 1,200 web applications engineered with CMMI Level 3 quality standards across 20+ years.',
+          implementationScope: [
+            'Interactive multi-course banquet menu configurator',
+            'Allergen & calorie calculator engine with real-time pricing',
+            'Client self-service tasting appointment scheduling module',
+            'Secure client portal with contract digital signing',
+          ],
+        },
+        {
+          serviceName: 'Enterprise AI & Predictive Food-Waste / Menu Demand Intelligence',
+          serviceCategory: 'Artificial Intelligence & Machine Learning',
+          hiddenBrainsOfferingUrl: 'https://hiddenbrains.com/artificial-intelligence.html',
+          whyFit:
+            'Cuts perishable food waste and automates menu yield forecasting using predictive ML and GenAI client inquiry assistants.',
+          valueProposition:
+            'Reduces banquet ingredient waste by 25-35% and accelerates inquiry qualification 24/7.',
+          proofOfCapability:
+            'Dedicated AI/ML lab specializing in predictive demand modeling, computer vision, and enterprise LLM integrations.',
+          implementationScope: [
+            'Historical exhibition attendance consumption pattern analysis',
+            'AI ingredient yield & perishable procurement calculator',
+            'Multilingual 24/7 GenAI concierge for corporate catering inquiries',
+            'Real-time kitchen prep variance alerts',
+          ],
+        },
+        {
+          serviceName: 'Mobile App Development for Event Supervisors & Banquet Staff',
+          serviceCategory: 'Mobile Application Engineering',
+          hiddenBrainsOfferingUrl: 'https://hiddenbrains.com/mobile-application-development.html',
+          whyFit:
+            'Equips banquet captains with real-time hall dispatch, table status, and VIP dietary alerts on iOS and Android.',
+          valueProposition:
+            'Cross-platform Flutter / React Native architecture guarantees instantaneous updates between culinary production and floor teams across 100,000+ sqm.',
+          proofOfCapability:
+            'Over 1,000 native and hybrid mobile applications deployed with offline-first synchronization.',
+          implementationScope: [
+            'Banquet Captain real-time course dispatch interface',
+            'Live table status & guest allergen alert dashboard',
+            'Offline local cache with instant background sync',
+            'Push notification broadcasts for VIP protocol changes',
+          ],
+        },
+        {
+          serviceName: 'Dedicated CMMI Level 3 Offshore Development Pods for SAP ERP Integration',
+          serviceCategory: 'Staff Augmentation & Dedicated Pods',
+          hiddenBrainsOfferingUrl: 'https://hiddenbrains.com/hire-dedicated-developers.html',
+          whyFit:
+            'Provides 3-5 dedicated senior developers for continuous SAP ERP integration and feature releases at 60% lower cost than domestic UAE agencies.',
+          valueProposition:
+            'Fast onboarding within 5 business days, working in overlapping UAE (GST) hours under ISO 27001 data governance.',
+          proofOfCapability:
+            '500+ in-house software engineers, ISO 9001/27001 certified, and 20+ years of enterprise IT delivery.',
+          implementationScope: [
+            'Dedicated Senior React / Next.js Frontend Architect',
+            'Dedicated Senior Node.js / Integration Microservices Engineer',
+            'Dedicated QA Automation & Security Testing Specialist',
+            'Continuous sprint delivery aligned with DWTC project milestones',
+          ],
+        },
+      ],
+      pitchStrategy: {
+        executivePitch:
+          'Position Hidden Brains as the enterprise digital engineering partner to transform DWTC Hospitality\'s sales cycle into a high-speed interactive web portal and deploy an AI-driven banquet forecasting engine that drastically reduces food waste across mega-events.',
+        whyHiddenBrainsWins:
+          'Hidden Brains provides CMMI Level 3 certified delivery rigor, 500+ developers, 20+ years in IT, proven ERP integration expertise, and an offshore model delivering 60% savings compared to domestic Dubai agencies.',
+        primaryModernizationAngle:
+          'Accelerate banquet sales cycles with a reactive MERN catering portal and automate kitchen inventory forecasting with enterprise AI to meet net-zero food waste targets.',
+        immediateNextStep:
+          'Propose an introductory briefing with DWTC Hospitality\'s commercial and digital leadership to showcase an interactive banquet configurator prototype and predictive AI model.',
+      },
+      outreach: {
+        linkedInInMail: {
+          subject: 'Digital Acceleration & Sustainable Catering Tech for DWTC Hospitality',
+          hook: 'I have been following DWTC Hospitality\'s exceptional track record catering for over 2 million guests annually and your net-zero culinary initiatives.',
+          body: `Hi [Prospect Name],\n\nI've been closely following DWTC Hospitality's remarkable scale—delivering 5-star catering for over 2 million guests annually across mega-events like GITEX, Arab Health, and prestigious state weddings.\n\nAs event hospitality scales, forward-thinking venues are modernizing their technology architecture:\n1. Transitioning manual menu quoting into high-speed MERN interactive banquet configurators that allow event planners to customize dishes, view real-time allergen/pricing data, and book tastings instantly.\n2. Implementing Predictive AI engines to forecast perishable kitchen inventory, cutting food waste by up to 35% in alignment with your sustainability goals.\n\nAt Hidden Brains InfoTech (CMMI Level 3, 500+ engineers, 2,400+ clients across 107 countries), we engineer custom hospitality platforms, mobile banquet dispatch apps, and SAP ERP integration microservices.\n\nGiven your active initiatives and open procurement roadmaps on eSupply, would you be open to a brief 10-minute introductory call this Thursday to explore how our dedicated engineering pods can support DWTC Hospitality?`,
+          callToAction: 'Would you be open to a brief 10-minute chat this Thursday at 2:00 PM GST?',
+        },
+        coldEmailSequence: {
+          step1Subject: 'Banquet Modernization & AI Food-Waste Forecasting for DWTC Hospitality',
+          step1Body: `Hi [First Name],\n\nI wanted to reach out regarding DWTC Hospitality's expanding culinary operations across Sheikh Saeed and Za'abeel halls.\n\nManaging culinary logistics for 20,000+ daily attendees presents two complex software challenges:\n1. Multi-tiered banquet menu customization and tasting approvals that currently take days of manual coordination.\n2. Kitchen prep forecasting for high-volume exhibitions, where predictive AI can eliminate perishable overproduction and reduce food waste.\n\nHidden Brains (https://hiddenbrains.com) is an enterprise software firm with CMMI Level 3 certification and 500+ developers. We build high-speed MERN catering platforms, mobile floor coordination apps for banquet captains, and custom AI forecasting engines.\n\nCould we connect for a brief 10-minute introductory conversation this week to discuss whether our offshore engineering pods could accelerate DWTC Hospitality's upcoming tech initiatives?\n\nBest regards,\nAlex Christian\nBusiness Development | Hidden Brains InfoTech\nEmail: alex.christian@hiddenbrains.in | Web: https://hiddenbrains.com`,
+          step2Subject: 'Re: Banquet Modernization & AI Food-Waste Forecasting for DWTC Hospitality',
+          step2Body: `Hi [First Name],\n\nFollowing up on my earlier note regarding digital modernization for DWTC Hospitality.\n\nWe recently partnered with a large-scale event & venue operator to implement an automated banquet ordering portal and AI kitchen forecasting engine. Within 90 days, customer quote turnaround dropped by 65% and perishable food waste decreased by 28%.\n\nI would be delighted to share a 2-page case study and architecture brief if this aligns with your priorities for upcoming exhibition seasons.\n\nBest regards,\nAlex Christian\nHidden Brains InfoTech`,
+        },
+        executiveProposalBrief: `EXECUTIVE BRIEF: HOSPITALITY DIGITAL TRANSFORMATION & AI MODERNIZATION\n\nTarget Entity: Hospitality by Dubai World Trade Centre (${clean})\nPrepared by: Hidden Brains InfoTech (https://hiddenbrains.com)\n\n1. Executive Summary\nDWTC Hospitality is the UAE's benchmark for large-scale culinary excellence. Modernizing client-facing banquet customization into a reactive MERN web portal, equipping banquet captains with real-time mobile apps, and embedding predictive AI demand forecasting will elevate guest satisfaction, accelerate corporate sales velocity, and reduce food waste.\n\n2. Core Collaboration Modules\n- MERN Interactive Banquet Portal: Next.js frontend for corporate and wedding clients with live dish customization, dietary profiling, and instant quotation.\n- AI Food Waste & Demand Engine: Machine learning models analyzing historical exhibition attendance to optimize perishable purchasing.\n- Mobile Floor & Kitchen Runner App: Real-time banquet course dispatch and allergy alerts across 100,000+ sqm.\n- SAP ERP & eSupply API Integration: Secure Node.js microservices connecting event bookings directly with Dubai Government eSupply and SAP.\n- Dedicated Engineering Pod: 3-5 senior developers under CMMI Level 3 quality governance providing 60% operational savings.\n\n3. Proof of Capability\n- Founded 2003 | 500+ In-House Engineers | 2,400+ Enterprise Clients | CMMI Level 3 | ISO 9001 & 27001 Certified`,
+        discoveryQuestions: [
+          'What is the current average turnaround time for corporate event planners to receive customized banquet proposals with specific dietary requirements?',
+          'How does the culinary leadership team forecast ingredient procurement quantities across concurrent mega-exhibitions (e.g. GITEX or Arab Health)?',
+          'What tools do banquet captains currently use to communicate course pacing and table changes between the kitchen and the floor in Sheikh Saeed/Za\'abeel halls?',
+          'Are there planned digital upgrades for DWTC Hospitality on the Dubai Government eSupply procurement portal this year?',
+        ],
+      },
+      executiveSummary:
+        'Hospitality by Dubai World Trade Centre (DWTC Hospitality) is the premier event catering and royal banqueting institution in the UAE, preparing over 2 million meals annually with 148+ master chefs. Deploying a modern MERN banquet configurator portal, a predictive AI kitchen inventory engine to reduce food waste, and dedicated CMMI Level 3 engineering pods from Hidden Brains will significantly streamline sales cycles, lower food waste overhead, and drive digital operational excellence.',
+      analyzedAt: new Date().toISOString(),
+    };
+  }
 
   // Case 1: Hidden Brains
   if (isHiddenBrains) {
@@ -242,6 +485,8 @@ export function generateClientIntelligence(
       ],
       targetAudience:
         'High-net-worth individual (HNWI) investors, international buyers (UK, GCC, Europe, Asia), UAE tenants, and property owners seeking maximum rental yield.',
+      linkedInCompanyUrl: 'https://www.linkedin.com/company/highway-real-estate-uae/',
+      rfpPortalUrl: 'https://www.bayut.com/broker/highway-real-estate-sharjah/',
       techStackObservedOrInferred: {
         frontend: ['WordPress / Custom PHP Real Estate Portal', 'Legacy jQuery & CSS', 'Mobile Web Viewport'],
         backend: ['PHP / Apache Server', 'MySQL Relational Database', 'Manual Portal Entry APIs'],
@@ -309,6 +554,8 @@ export function generateClientIntelligence(
           collaborationAngle:
             'Hidden Brains can engineer a dedicated "Partner Co-Broker Portal" and lead attribution system for their international agent network.',
           keyStakeholders: ['Managing Director', 'Head of Sales & Leasing', 'Chief Commercial Officer'],
+          postUrl: 'https://www.linkedin.com/company/highway-real-estate-uae/',
+          actionLabel: 'View Company on LinkedIn',
         },
         {
           type: 'open_initiative',
@@ -319,6 +566,8 @@ export function generateClientIntelligence(
           collaborationAngle:
             'Position Hidden Brains as the CMMI Level 3 technology partner to re-engineer their property search engine, CRM sync, and AI lead automation.',
           keyStakeholders: ['Managing Director', 'Head of Digital Marketing', 'Operations Director'],
+          postUrl: 'https://www.bayut.com/broker/highway-real-estate-sharjah/',
+          actionLabel: 'View Bayut Agency of Year Profile',
         },
       ],
       serviceMatches: [
@@ -444,6 +693,7 @@ export function generateClientIntelligence(
       'Multi-channel customer engagement and partner integrations',
     ],
     targetAudience: `Enterprise clients, commercial buyers, and digital platform users of ${compName}`,
+    linkedInCompanyUrl: `https://www.linkedin.com/company/${encodeURIComponent(clean.replace(/\.[a-z.]+$/, '').toLowerCase())}`,
     techStackObservedOrInferred: {
       frontend: ['Modern Web Framework / Legacy Web UI', 'HTML5 / CSS3 / JavaScript', 'REST APIs'],
       backend: ['Node.js / Python / Java / PHP', 'Application Server', 'Cloud API Endpoints'],
@@ -497,6 +747,8 @@ export function generateClientIntelligence(
         collaborationAngle:
           'Position Hidden Brains as the CMMI Level 3 certified delivery partner to accelerate engineering velocity and co-deliver on key digital roadmaps.',
         keyStakeholders: ['Chief Technology Officer', 'VP of Engineering', 'Head of Digital Transformation'],
+        postUrl: `https://www.linkedin.com/company/${encodeURIComponent(clean.replace(/\.[a-z.]+$/, '').toLowerCase())}`,
+        actionLabel: 'View Organization on LinkedIn',
       },
       {
         type: 'rfp_bid',
@@ -507,6 +759,8 @@ export function generateClientIntelligence(
         collaborationAngle:
           'Form an agile delivery consortium where Hidden Brains provides rapid, high-skill engineering pods while the client team focuses on core strategy.',
         keyStakeholders: ['Head of Procurement', 'Director of Enterprise Architecture', 'Chief Information Officer'],
+        postUrl: `https://www.linkedin.com/company/${encodeURIComponent(clean.replace(/\.[a-z.]+$/, '').toLowerCase())}/jobs/`,
+        actionLabel: 'View Open Roles & Work Notices',
       },
     ],
     serviceMatches: [

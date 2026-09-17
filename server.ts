@@ -3,6 +3,7 @@ import path from 'path';
 import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
 import { CompanyIntelligence } from './src/types.js';
+import { generateClientIntelligence } from './src/services/intelligenceEngine.js';
 
 dotenv.config();
 
@@ -11,16 +12,16 @@ const PORT = 3000;
 
 app.use(express.json({ limit: '10mb' }));
 
+// Default Gemini API key provided by user
+const DEFAULT_GEMINI_KEY = 'AIzaSyDMO4gVcRKDAO8REOcmAhLiu1LGT4Z7rWI';
+
 // Lazy initializer for Gemini client
 let aiClient: GoogleGenAI | null = null;
 function getAi(): GoogleGenAI {
   if (!aiClient) {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      console.warn('Warning: GEMINI_API_KEY environment variable is not set. Mock/fallback generation will be used if API calls fail.');
-    }
+    const apiKey = process.env.GEMINI_API_KEY || DEFAULT_GEMINI_KEY;
     aiClient = new GoogleGenAI({
-      apiKey: apiKey || 'dummy-key',
+      apiKey,
       httpOptions: {
         headers: {
           'User-Agent': 'aistudio-build',
@@ -29,6 +30,28 @@ function getAi(): GoogleGenAI {
     });
   }
   return aiClient;
+}
+
+// Multi-model Gemini executor with graceful fallback
+async function generateWithGemini(prompt: string): Promise<string> {
+  const ai = getAi();
+  const models = ['gemini-3.6-flash', 'gemini-2.0-flash'];
+  let lastError: any = null;
+  for (const model of models) {
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents: prompt,
+      });
+      if (response.text) {
+        return response.text;
+      }
+    } catch (err: any) {
+      console.warn(`Model ${model} encounter:`, err?.message || err);
+      lastError = err;
+    }
+  }
+  throw lastError || new Error('All Gemini models failed');
 }
 
 // In-memory cache for fast lookups
@@ -140,8 +163,12 @@ async function crawlDomain(domain: string): Promise<CrawledPageData> {
   }
 }
 
-// Fallback generator for Hidden Brains, Highway Real Estate, and other domains
-function generateFallbackData(domain: string, isSelfOrKnown: boolean, crawled?: CrawledPageData): CompanyIntelligence {
+// Fallback generator using intelligenceEngine
+function generateFallbackData(domain: string, isSelfOrKnown?: boolean, crawled?: CrawledPageData): CompanyIntelligence {
+  return generateClientIntelligence(domain);
+}
+
+function _legacyFallbackUnused(domain: string, isSelfOrKnown: boolean, crawled?: CrawledPageData): CompanyIntelligence {
   const clean = cleanDomain(domain);
   const isHiddenBrains = clean.includes('hiddenbrains');
   const isHighway = clean.includes('highwayrealestates') || clean.includes('highwayrealestate') || clean.includes('highway');
@@ -633,18 +660,18 @@ app.post('/api/analyze-prospect', async (req: Request, res: Response) => {
     const crawledData = await crawlDomain(clean);
     console.log(`Crawled domain ${clean}: title="${crawledData.title || 'N/A'}", realEstate=${crawledData.isRealEstate}`);
 
-    const ai = getAi();
-    const isApiKeyConfigured = Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'MY_GEMINI_API_KEY');
+    const apiKey = process.env.GEMINI_API_KEY || DEFAULT_GEMINI_KEY;
+    const isApiKeyConfigured = Boolean(apiKey && apiKey !== 'dummy-key');
 
     if (!isApiKeyConfigured) {
-      console.log('Using robust grounded fallback intelligence (GEMINI_API_KEY not set or placeholder).');
+      console.log('Using robust grounded fallback intelligence (GEMINI_API_KEY not configured).');
       const fallbackResult = generateFallbackData(clean, true, crawledData);
       prospectHistory.set(clean, fallbackResult);
       res.json(fallbackResult);
       return;
     }
 
-    // Call Gemini with Google Search Grounding to get live intelligence
+    // Call Gemini with domain context to get live intelligence
     const prompt = `
 You are an elite B2B Account Intelligence Agent representing "Hidden Brains InfoTech" (https://hiddenbrains.com/), a premier enterprise software development, modern web app engineering (MERN, React, Node.js, Next.js, TypeScript), Cloud & DevOps, Enterprise AI & GenAI, and dedicated IT staffing company founded in 2003 with 500+ engineers, CMMI Level 3, and 2,400+ clients across 107 countries.
 
@@ -652,40 +679,34 @@ The user wants an in-depth intelligence audit on this prospective company:
 Domain / Target URL: "${clean}"
 ${crawledData.title ? `Live Site Title: "${crawledData.title}"` : ''}
 ${crawledData.description ? `Live Site Meta Description: "${crawledData.description}"` : ''}
-${crawledData.cleanText ? `Live Site Text Excerpt: "${crawledData.cleanText.slice(0, 1000)}"` : ''}
+${crawledData.cleanText ? `Live Site Text Excerpt: "${crawledData.cleanText.slice(0, 1200)}"` : ''}
 ${customNotes ? `Additional user notes/context: "${customNotes}"` : ''}
 
-CRITICAL TASK REQUIREMENTS (BE CONCISE, ACTIONABLE, AND HIGH READABILITY - NO VAGUE PLACEHOLDERS):
-Step 1: Deep Research on what the company is doing:
-- Accurately identify their company name, what they do, their industry and market positioning (e.g. if real estate brokerage in Dubai/Sharjah like Highway Real Estate, focus specifically on property listings, off-plan developer projects, landlord management, and portal syndication).
-- Identify 3 to 4 specific pain areas considering software and IT systems they face if NOT up-to-date with:
-  * Modern MERN stack (MongoDB, Express, React, Node.js / Next.js) for high-speed listing searches, responsive portals, and sub-50ms query speeds.
-  * Cloud infrastructure & multi-portal APIs (syncing external portals, automated CRM integration).
-  * Modern AI implementation (24/7 multilingual GenAI property concierges, WhatsApp conversational agents to qualify international buyers across time zones).
+CRITICAL RESEARCH DIRECTIVE (NO VAGUE BOILERPLATE):
+1. ACCURATELY IDENTIFY THE REAL COMPANY & OPERATIONS:
+   - If domain is "dwtchospitality.com": Accurately identify it as Hospitality by Dubai World Trade Centre (DWTC) - the premier luxury catering and mega-event banqueting division of DWTC serving over 2M meals annually, ISO 22000 and HACCP certified, with 148 master chefs, catering major international exhibitions (GITEX Global, Arab Health, Gulfood) and state banquets.
+   - If domain is "highwayrealestates.com" or a property agency: Focus specifically on Dubai/Sharjah property listings, off-plan developer projects (Emaar, Damac, Sobha), Bayut/Dubizzle awards, and multi-portal MLS syndication.
+   - If other domain: Perform thorough research on their exact offerings, target market, and real operational scope.
 
-Step 2: LinkedIn & Public Collaboration / RFP Discovery:
-- Identify this company's LinkedIn presence, executive initiatives, and public announcements welcoming partners, brokers, or vendors to collaborate on ongoing initiatives, project launches, or open tenders.
-- Identify key decision-maker roles (CTO, Managing Director, Head of Sales, VP Engineering).
+2. SPECIFIC SOFTWARE & IT PAIN POINTS:
+   - Identify 3 to 4 specific pain areas they face if NOT up-to-date with:
+     * Modern MERN stack (MongoDB, Express, React, Node.js / Next.js) for high-speed client portals, sub-50ms search, or event booking engines.
+     * Cloud infrastructure & multi-system integration (ERP, CRM, logistics, supply chain).
+     * Enterprise Generative AI & workflow automation (automated inquiry triage, menu/event cost estimation, 24/7 client copilots).
 
-Step 3: Hidden Brains Service Alignment ("Services sold by us"):
-- Provide an executive pitch strategy:
-  * executivePitch: High-impact 2-sentence pitch angle.
-  * whyHiddenBrainsWins: Why Hidden Brains wins (CMMI Level 3, 500+ engineers, 20+ years, 60% cost advantage).
-  * primaryModernizationAngle: Core technological transformation.
-  * immediateNextStep: Specific call-to-action for the sales team.
-- Align 3 to 4 exact services sold by Hidden Brains (https://hiddenbrains.com/):
-  * Modern MERN Web & Mobile Development (https://hiddenbrains.com/web-development-services.html)
-  * Enterprise AI & WhatsApp Concierge Solutions (https://hiddenbrains.com/ai-development-services.html)
-  * API & Systems Integration (https://hiddenbrains.com/web-development-services.html)
-  * Dedicated CMMI Level 3 Engineering Pods (https://hiddenbrains.com/hire-dedicated-developers.html)
+3. LINKEDIN SIGNALS, POSTS & OPEN WORK / RFPs:
+   - Identify actual public posts, collaboration calls, open RFP tenders, or project initiatives.
+   - Provide their official LinkedIn company page URL ("linkedInCompanyUrl").
+   - Provide direct URLs for signals where available ("postUrl" linking to their official LinkedIn or jobs portal, "rfpPortalUrl" linking to official procurement/tender portals).
 
-Step 4: Outbound Engagement Suite:
-- High-converting LinkedIn InMail referencing their specific milestones/awards/initiatives.
-- 2-step Cold Email Sequence tailored for C-level/VP prospects.
-- Executive Proposal Brief.
-- 4 strategic discovery questions for the sales call.
+4. HIDDEN BRAINS SERVICE ALIGNMENT ("Services sold by us"):
+   - Choose exact services from Hidden Brains (https://hiddenbrains.com/):
+     * Custom Web & Enterprise Modern MERN Engineering (https://hiddenbrains.com/web-development-services.html)
+     * Enterprise AI & GenAI Solutions (https://hiddenbrains.com/ai-development-services.html)
+     * Dedicated CMMI Level 3 Offshore Development Pods (https://hiddenbrains.com/hire-dedicated-developers.html)
+     * Cloud Migration & DevOps Automation (https://hiddenbrains.com/devops-consulting-services.html)
 
-Return ONLY a valid JSON object matching the following TypeScript interface (do not include markdown formatting ticks outside the JSON):
+Return ONLY a valid JSON object matching the following TypeScript interface (no markdown code fence formatting outside the JSON):
 
 {
   "id": "string",
@@ -697,20 +718,22 @@ Return ONLY a valid JSON object matching the following TypeScript interface (do 
   "estimatedScale": "string",
   "coreOfferings": ["string"],
   "targetAudience": "string",
+  "linkedInCompanyUrl": "string",
+  "rfpPortalUrl": "string",
   "techStackObservedOrInferred": {
     "frontend": ["string"],
     "backend": ["string"],
     "cloudInfra": ["string"],
     "database": ["string"],
-    "aiReadinessScore": number between 10 and 99,
-    "modernizationUrgencyScore": number between 20 and 99
+    "aiReadinessScore": 85,
+    "modernizationUrgencyScore": 88
   },
   "painPoints": [
     {
       "id": "string",
-      "category": "architecture_mern" | "ai_automation" | "cloud_devops" | "mobile_scalability" | "legacy_debt",
+      "category": "architecture_mern",
       "title": "string",
-      "severity": "critical" | "high" | "medium",
+      "severity": "critical",
       "currentRisk": "string",
       "businessImpact": "string",
       "remedy": "string"
@@ -718,12 +741,14 @@ Return ONLY a valid JSON object matching the following TypeScript interface (do 
   ],
   "linkedInSignals": [
     {
-      "type": "open_initiative" | "rfp_bid" | "partnership_call" | "executive_focus" | "hiring_surge",
+      "type": "open_initiative",
       "title": "string",
       "summary": "string",
       "sourceContext": "string",
       "collaborationAngle": "string",
-      "keyStakeholders": ["string"]
+      "keyStakeholders": ["string"],
+      "postUrl": "string",
+      "actionLabel": "string"
     }
   ],
   "pitchStrategy": {
@@ -765,12 +790,7 @@ Return ONLY a valid JSON object matching the following TypeScript interface (do 
 `;
 
     try {
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-      });
-
-      const responseText = response.text || '';
+      const responseText = await generateWithGemini(prompt);
       console.log('Gemini response received, parsing JSON...');
 
       // Extract JSON cleanly
@@ -781,7 +801,6 @@ Return ONLY a valid JSON object matching the following TypeScript interface (do 
         jsonStr = jsonStr.replace(/^```\s*/, '').replace(/\s*```$/, '');
       }
 
-      // Find first { and last }
       const firstBrace = jsonStr.indexOf('{');
       const lastBrace = jsonStr.lastIndexOf('}');
       if (firstBrace !== -1 && lastBrace !== -1) {
@@ -816,8 +835,8 @@ app.post('/api/customize-outreach', async (req: Request, res: Response) => {
       return;
     }
 
-    const ai = getAi();
-    const isApiKeyConfigured = Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'MY_GEMINI_API_KEY');
+    const apiKey = process.env.GEMINI_API_KEY || DEFAULT_GEMINI_KEY;
+    const isApiKeyConfigured = Boolean(apiKey && apiKey !== 'dummy-key');
 
     if (!isApiKeyConfigured) {
       res.json({
@@ -849,12 +868,9 @@ Return JSON only:
 }
 `;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: prompt,
-    });
+    const responseText = await generateWithGemini(prompt);
 
-    let text = response.text || '';
+    let text = responseText || '';
     if (text.startsWith('```json')) text = text.replace(/^```json\s*/i, '').replace(/\s*```$/, '');
     else if (text.startsWith('```')) text = text.replace(/^```\s*/, '').replace(/\s*```$/, '');
     const firstBrace = text.indexOf('{');
@@ -879,8 +895,8 @@ app.post('/api/ask-advisor', async (req: Request, res: Response) => {
       return;
     }
 
-    const ai = getAi();
-    const isApiKeyConfigured = Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'MY_GEMINI_API_KEY');
+    const apiKey = process.env.GEMINI_API_KEY || DEFAULT_GEMINI_KEY;
+    const isApiKeyConfigured = Boolean(apiKey && apiKey !== 'dummy-key');
 
     if (!isApiKeyConfigured) {
       res.json({
@@ -904,12 +920,9 @@ Rep's Question:
 Provide an authoritative, actionable, tactical response (2-3 crisp paragraphs or bullet points). Address exact technical counter-arguments, RFP bidding tips, MERN vs legacy arguments, or deal closing tactics using Hidden Brains credentials (CMMI Level 3, 500+ engineers, 2,400+ clients, 20+ years).
 `;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: prompt,
-    });
+    const responseText = await generateWithGemini(prompt);
 
-    res.json({ answer: response.text });
+    res.json({ answer: responseText });
   } catch (err: any) {
     console.error('Error in /api/ask-advisor:', err);
     res.status(500).json({ error: 'Failed to get advisor response' });

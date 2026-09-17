@@ -15,6 +15,8 @@ export interface LinkedInCollaborationSignal {
   sourceContext: string;
   collaborationAngle: string;
   keyStakeholders: string[];
+  postUrl?: string;
+  actionLabel?: string;
 }
 
 export interface HiddenBrainsServiceMatch {
@@ -54,6 +56,8 @@ export interface CompanyIntelligence {
   estimatedScale: string;
   coreOfferings: string[];
   targetAudience: string;
+  linkedInCompanyUrl?: string;
+  rfpPortalUrl?: string;
   techStackObservedOrInferred: {
     frontend: string[];
     backend: string[];
